@@ -16,7 +16,7 @@ typedef enum EDN_LOG_LEVEL {
 class EdnLogger {
 public:
     EdnLogger() {
-        log_cb = nullptr;
+        log_cb = Print;
     }
     void SetLogCb(pf_log_cb cb) {
         log_cb = cb;
@@ -29,6 +29,8 @@ public:
     const char* GetLevelStr(int level);
 
     static EdnLogger* GetInstanse();
+    
+    static int Print(const char *format, ...);
 
 private:
     
