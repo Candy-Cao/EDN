@@ -10,6 +10,7 @@
 #include "edn_define.h"
 #include "edn_event.h"
 #include <csignal>
+#include <cstring>
 #include <functional>
 #include <signal.h>
 namespace edn {
