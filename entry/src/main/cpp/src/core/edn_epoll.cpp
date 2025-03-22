@@ -25,6 +25,7 @@ extern int errno;
 namespace edn {
 EdnEpoll::EdnEpoll(EdnContext *ctx): context_(ctx) {
     epfd_ = epoll_create(0);
+    assert(epfd_ > 0);
     EDN_LOG_INFO("create epoll success: epfd:%d", epfd_);
     events = new epoll_event[Singleton<EdnConfig>::getInstance()->max_event_num];
     if (!events) {
