@@ -12,6 +12,7 @@
 #include "edn_signal.h"
 #include "singleton.h"
 #include <cerrno>
+#include <cstring>
 #include <cstddef>
 #include <sys/epoll.h>
 #include <errno.h>
