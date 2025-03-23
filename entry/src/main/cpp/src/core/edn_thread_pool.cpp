@@ -5,6 +5,7 @@
 // please include "napi/native_api.h".
 
 #include "edn_thread_pool.h"
+#include <signal.h>
 
 namespace edn {
 
@@ -14,7 +15,6 @@ EdnThreadPool::EdnThreadPool(size_t num_threads) : stop(false) {
         workers.emplace_back([this] {
             while (true) {
                 std::function<void()> task;
-
                 {
                     std::unique_lock<std::mutex> lock(this->queue_mutex);
                     this->condition.wait(lock, [this] { return this->stop || !this->tasks.empty(); });

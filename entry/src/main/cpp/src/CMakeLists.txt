@@ -24,12 +24,17 @@ set(TEST_LOG_SRC ${CMAKE_CURRENT_SOURCE_DIR}/test/test_log.cpp)
 
 set(TEST_SIG_SRC ${CMAKE_CURRENT_SOURCE_DIR}/test/test_signal.cpp)
 
+set(TEST_THREAD_POOL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/test/test_thread_pool.cpp)
+
 add_library(edn ${SOURCES})
 
 add_executable(test_log ${TEST_LOG_SRC})
 add_executable(test_sig ${TEST_SIG_SRC})
+add_executable(test_thread_pool ${TEST_THREAD_POOL_SRC})
 target_link_libraries(test_log edn)
 
 target_link_libraries(test_sig edn)
+
+target_link_libraries(test_thread_pool edn)
 
 

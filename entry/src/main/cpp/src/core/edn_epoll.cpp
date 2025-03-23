@@ -27,15 +27,15 @@ EdnEpoll::EdnEpoll(EdnContext *ctx): context_(ctx) {
     epfd_ = epoll_create(Singleton<EdnConfig>::getInstance()->max_event_num);
     assert(epfd_ > 0);
     EDN_LOG_INFO("create epoll success: epfd:%d", epfd_);
-    events = new epoll_event[Singleton<EdnConfig>::getInstance()->max_event_num];
-    if (!events) {
+    events_ = new epoll_event[Singleton<EdnConfig>::getInstance()->max_event_num];
+    if (!events_) {
         EDN_LOG_ERROR("memory alloc failed. ");
     }
 }
 
 EdnEpoll::~EdnEpoll() {
-    delete[] events;
-    events = nullptr;
+    delete[] events_;
+    events_ = nullptr;
 }
 
 int EdnEpoll::add(EdnEventPtr event) {
@@ -50,7 +50,7 @@ int EdnEpoll::add(EdnEventPtr event) {
         memset(&sa, 0, sizeof(sa));
         sa.sa_handler = EdnContext::SigHandler;
         sa.sa_flags |= SA_RESTART;
-        sigfillset(&sa.sa_mask);
+        sigfillset(&(sa.sa_mask));
         int sig = std::dynamic_pointer_cast<EdnSignal>(event)->GetSignal();
         assert(sigaction(sig, &sa, &old_sa) != -1);
         std::dynamic_pointer_cast<EdnSignal>(event)->SetOldSigaction(&old_sa);
@@ -87,13 +87,13 @@ int EdnEpoll::del(EdnEventPtr event) {
 
 int EdnEpoll::dispatch(int timeout) {
     int max_event_num = GetContext()->GetConfig()->max_event_num;
-    int num = epoll_wait(epfd_, events, max_event_num, timeout);
+    int num = epoll_wait(epfd_, events_, max_event_num, timeout);
     if (num == -1 && errno != EINTR) {
         EDN_LOG_ERROR("call epoll_wait error: %d", errno);
         return errno;
     }
     for (int i = 0; i < num; i++) {
-        int fd = events[i].data.fd;
+        int fd = events_[i].data.fd;
         if (fd == context_->GetSigFd()) {//处理信号事件
             DispatchSignal();
             continue;

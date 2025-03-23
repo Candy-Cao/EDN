@@ -32,7 +32,6 @@ EdnContext::EdnContext() {
 
 void EdnContext::SigHandler(int sig) {
     int save_errno = errno;
-    
     int msg = sig;
     send(pipe_fds_[1], (char*)&msg, 1, 0);
     errno = save_errno;
@@ -92,6 +91,7 @@ void EdnContext::Run() {
             EDN_LOG_ERROR("epoll wait failed, errno:%d", errno);
             return;
         }
+        EDN_LOG_INFO("a round of event dispatch end...");
     }
 }
 

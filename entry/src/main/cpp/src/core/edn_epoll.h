@@ -28,7 +28,7 @@ public:
 private:
     int epfd_;
     EdnContext *context_;
-    epoll_event *events;
+    epoll_event *events_;
 };
 }
 
