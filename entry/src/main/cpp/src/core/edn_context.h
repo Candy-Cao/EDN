@@ -23,6 +23,8 @@ class EdnContext {
 public:
     EdnContext();
     
+    ~EdnContext();
+    
     //信号处理函数
     static void SigHandler(int sig);
     
@@ -72,7 +74,7 @@ private:
     std::mutex idle_queue_mutex_;
 //    std::list<EdnEventPtr> active_queue_;
 //    std::mutex active_queue_mutex_;
-    EdnThreadPoolPtr thread_pool_;
+    EdnThreadPoolPtr thread_pool_ = nullptr;
     std::atomic_bool done_;
 };
 

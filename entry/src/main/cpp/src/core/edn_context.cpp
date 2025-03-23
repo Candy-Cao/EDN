@@ -25,9 +25,15 @@ EdnContext::EdnContext() {
     assert(ret != -1);
     EDN_LOG_INFO("create signal pipe success. write fd: %d, read fd: %d", pipe_fds_[1], pipe_fds_[0]);
     EdnUtils::SetNonBlocking(pipe_fds_[1]);
+    EdnUtils::SetNonBlocking(pipe_fds_[0]);
     listener_ = std::make_shared<EdnEpoll>(this);
     config_ = Singleton<EdnConfig>::getInstance();
-    thread_pool_ = std::make_shared<EdnThreadPool>(config_->work_thread_num);
+//    thread_pool_ = std::make_shared<EdnThreadPool>(config_->work_thread_num);
+}
+
+EdnContext::~EdnContext() {
+    close(pipe_fds_[0]);
+    close(pipe_fds_[1]);
 }
 
 void EdnContext::SigHandler(int sig) {

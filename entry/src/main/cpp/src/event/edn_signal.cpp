@@ -7,6 +7,7 @@
 #include "edn_signal.h"
 #include "edn_log.h"
 #include "edn_context.h"
+
 #include <cassert>
 
 namespace edn {

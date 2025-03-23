@@ -47,6 +47,7 @@ int EdnEpoll::add(EdnEventPtr event) {
     if (event->GetFd() < 0) {//信号事件
         ev.data.fd = event->GetContext()->GetSigFd();
         struct sigaction sa, old_sa;
+
         memset(&sa, 0, sizeof(sa));
         sa.sa_handler = EdnContext::SigHandler;
         sa.sa_flags |= SA_RESTART;
