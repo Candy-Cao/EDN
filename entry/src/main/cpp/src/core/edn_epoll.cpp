@@ -62,7 +62,7 @@ int EdnEpoll::add(EdnEventPtr event) {
         sa.sa_flags |= SA_RESTART; 
         sigfillset(&sa.sa_mask);
         int sig = std::dynamic_pointer_cast<EdnSignal>(event)->GetSignal();
-        assert(sigaction(sig, &sa, &old_sa) != -1);
+        sigaction(sig, &sa, &old_sa);
         EDN_LOG_INFO("add signal %d to epoll.", sig);
         std::dynamic_pointer_cast<EdnSignal>(event)->SetOldSigaction(&old_sa);
         return EDN_OK;
