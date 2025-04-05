@@ -8,6 +8,7 @@
 #include "edn_define.h"
 #include "edn_epoll.h"
 #include "edn_log.h"
+#include "edn_signal.h"
 #include "edn_utils.h"
 #include "singleton.h"
 #include <cassert>
@@ -28,7 +29,7 @@ EdnContext::EdnContext() {
     EdnUtils::SetNonBlocking(pipe_fds_[0]);
     listener_ = std::make_shared<EdnEpoll>(this);
     config_ = Singleton<EdnConfig>::getInstance();
-//    thread_pool_ = std::make_shared<EdnThreadPool>(config_->work_thread_num);
+    thread_pool_ = std::make_shared<EdnThreadPool>(config_->work_thread_num);
 }
 
 EdnContext::~EdnContext() {
@@ -41,6 +42,7 @@ void EdnContext::SigHandler(int sig) {
     int msg = sig;
     send(pipe_fds_[1], (char*)&msg, 1, 0);
     errno = save_errno;
+    EDN_LOG_INFO( "I caugh the signal %d\n", sig );
 }
 
 void EdnContext::AddEvent(EdnEventPtr event) {
@@ -53,6 +55,7 @@ void EdnContext::AddEvent(EdnEventPtr event) {
         }
     }
     int ret = listener_->add(event);
+    EDN_LOG_INFO("add event, eventId:%d, fd:%d", event->GetUUID(), event->GetFd());
     assert(ret == 0);
 }
 

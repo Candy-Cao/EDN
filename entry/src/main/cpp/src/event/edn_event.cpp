@@ -23,8 +23,8 @@ unsigned int EdnEvent::GetEvents() {
 
 void EdnEvent::Active() {
     status_ = ACTIVE;
-//    context_.lock()->GetThreadPool()->enqueue(std::bind(&EdnEvent::handler, this));
-    handler();
+    context_.lock()->GetThreadPool()->enqueue(std::bind(&EdnEvent::handler, this));
+    // handler();
 }
 
 }

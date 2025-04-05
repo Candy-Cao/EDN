@@ -28,8 +28,18 @@ EdnEpoll::EdnEpoll(EdnContext *ctx): context_(ctx) {
     assert(epfd_ > 0);
     EDN_LOG_INFO("create epoll success: epfd:%d", epfd_);
     events_ = new epoll_event[Singleton<EdnConfig>::getInstance()->max_event_num];
+    memset(events_, 0, sizeof(epoll_event) * Singleton<EdnConfig>::getInstance()->max_event_num);
     if (!events_) {
         EDN_LOG_ERROR("memory alloc failed. ");
+    }
+    int sigfd = context_->GetSigFd();
+    struct epoll_event ev;
+    ev.data.fd = sigfd;
+    ev.events = EPOLLIN;
+    int ret = epoll_ctl(epfd_, EPOLL_CTL_ADD, sigfd, &ev);
+    if (ret == -1) {
+        EDN_LOG_ERROR("system call epoll_ctl failed. errno:%d", errno);
+        return;
     }
 }
 
@@ -45,21 +55,23 @@ int EdnEpoll::add(EdnEventPtr event) {
     epoll_event ev;
     ev.data.fd = event->GetFd();
     if (event->GetFd() < 0) {//信号事件
-        ev.data.fd = event->GetContext()->GetSigFd();
         struct sigaction sa, old_sa;
-
-        memset(&sa, 0, sizeof(sa));
+        memset(&sa, '\0', sizeof(sa));
+        memset(&old_sa, '\0', sizeof(sa));
         sa.sa_handler = EdnContext::SigHandler;
-        sa.sa_flags |= SA_RESTART;
-        sigfillset(&(sa.sa_mask));
+        sa.sa_flags |= SA_RESTART; 
+        sigfillset(&sa.sa_mask);
         int sig = std::dynamic_pointer_cast<EdnSignal>(event)->GetSignal();
         assert(sigaction(sig, &sa, &old_sa) != -1);
+        EDN_LOG_INFO("add signal %d to epoll.", sig);
         std::dynamic_pointer_cast<EdnSignal>(event)->SetOldSigaction(&old_sa);
+        return EDN_OK;
     }
     ev.events = event->GetEvents();
     EDN_LOG_INFO("add listen for fd:%d with event write:%d and read:%d to epfd:%d", ev.data.fd, ev.events & EPOLLOUT, ev.events & EPOLLIN, epfd_);
     int ret = epoll_ctl(epfd_, EPOLL_CTL_ADD, ev.data.fd, &ev);
     if (ret == EEXIST) {
+        EDN_LOG_WARN("fd:%d already exist in epoll, modify it.", ev.data.fd);
         ret = epoll_ctl(epfd_, EPOLL_CTL_MOD, ev.data.fd, &ev);
     }
     if (ret == -1) {

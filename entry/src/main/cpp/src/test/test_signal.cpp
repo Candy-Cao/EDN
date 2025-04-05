@@ -21,14 +21,15 @@ void sigint_handler(int sig) {
 
 int main() {
     auto ctx = Singleton<EdnContext>::getInstance();
-    auto sigev = std::make_shared<EdnSignal>(SIGINT, false, []{EDN_LOG_INFO("sigint trigger ***********");});
+    auto sigev = std::make_shared<EdnSignal>(SIGINT, true, []{EDN_LOG_INFO("sigint trigger ***********");});
     ctx->AddEvent(sigev);
+    // struct sigaction sa;
+    // sa.sa_handler = EdnContext::SigHandler;
+    // sa.sa_flags |= SA_RESTART;
+    // sigfillset(&(sa.sa_mask));
+    // sigaction(SIGINT, &sa, NULL);
+    // sleep(10);
     ctx->Run();
-//    struct sigaction sa;
-//    sa.sa_handler = sigint_handler;
-//    sa.sa_flags |= SA_RESTART;
-//    sigfillset(&(sa.sa_mask));
-//    sigaction(SIGINT, &sa, NULL);
-//    sleep(10);
+
     return 0;
 }
