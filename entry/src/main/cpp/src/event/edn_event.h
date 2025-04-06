@@ -10,6 +10,7 @@
 
 #include "edn_define.h"
 #include "edn_utils.h"
+#include "edn.h"
 #include <memory>
 
 namespace edn {
@@ -33,7 +34,7 @@ public:
     EdnEvent();
     EdnEvent(int fd, unsigned int events);
     
-    virtual int handler() {status_ = IDLE;};
+    virtual int handler() {status_ = IDLE; return EDN_OK;};
     void Active();
     virtual int GetFd() {
         return fd_;

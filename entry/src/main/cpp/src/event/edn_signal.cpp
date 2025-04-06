@@ -22,7 +22,7 @@ EdnSignal::EdnSignal(int sig, bool is_persist, std::function<void()> callback): 
 int EdnSignal::handler() {
     EDN_LOG_INFO("signale %d trigger %d times total.", sig_, ++trigger_cnt_);
     callback_();
-    EdnEvent::handler();
+    return EdnEvent::handler();
 } 
 
 }
