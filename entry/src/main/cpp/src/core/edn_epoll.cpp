@@ -41,6 +41,7 @@ EdnEpoll::EdnEpoll(EdnContext *ctx): context_(ctx) {
         EDN_LOG_ERROR("system call epoll_ctl failed. errno:%d", errno);
         return;
     }
+    timer_group_ = std::make_shared<EdnTimerGroup>();
 }
 
 EdnEpoll::~EdnEpoll() {
@@ -50,6 +51,12 @@ EdnEpoll::~EdnEpoll() {
 
 int EdnEpoll::add(EdnEventPtr event) {
     if (event->GetFd() == INVALID_FD) {//定时器事件
+        auto timer = std::dynamic_pointer_cast<EdnTimer>(event);
+        if (timer->GetExpireTime() <= EdnUtils::GetCurrentTime()) {
+            context_->GetThreadPool()->enqueue(std::bind(&EdnTimer::handler, timer));
+            return EDN_OK;
+        }
+        timer_group_->AddTimer(timer);
         return EDN_OK;
     }
     epoll_event ev;
@@ -98,9 +105,9 @@ int EdnEpoll::del(EdnEventPtr event) {
     return EDN_OK;
 }
 
-int EdnEpoll::dispatch(int timeout) {
+int EdnEpoll::dispatch(int *timeout) {
     int max_event_num = GetContext()->GetConfig()->max_event_num;
-    int num = epoll_wait(epfd_, events_, max_event_num, timeout);
+    int num = epoll_wait(epfd_, events_, max_event_num, *timeout);
     if (num == -1 && errno != EINTR) {
         EDN_LOG_ERROR("call epoll_wait error: %d", errno);
         return errno;
@@ -113,6 +120,7 @@ int EdnEpoll::dispatch(int timeout) {
         }
         //TODO:IO event dispatch
     }
+    *timeout = timer_group_->Dispatch();
     return EDN_OK;
 }
 

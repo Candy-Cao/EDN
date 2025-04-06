@@ -7,6 +7,7 @@
 #include "edn_utils.h"
 #include <mutex>
 #include <fcntl.h>
+#include <sys/time.h>
 
 namespace edn {
 static std::mutex g_uuid_mutex;
@@ -24,5 +25,10 @@ int EdnUtils::SetNonBlocking(int fd) {
     return old_opt;
 }
 
-
+int EdnUtils::GetCurrentTime()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
 }

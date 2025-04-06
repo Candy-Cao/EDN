@@ -16,6 +16,8 @@ public:
     
     //设置非阻塞标志
     static int SetNonBlocking(int fd);
+
+    static int GetCurrentTime();
 };
 }
 #endif //EDN_EDN_UTILS_H

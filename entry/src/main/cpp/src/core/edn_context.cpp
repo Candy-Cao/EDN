@@ -48,9 +48,9 @@ void EdnContext::SigHandler(int sig) {
 void EdnContext::AddEvent(EdnEventPtr event) {
     {
         std::lock_guard<std::mutex> lock(idle_queue_mutex_);
-        idle_queue_.push_back(event);
         int fd = event->GetFd();
-        if (fd != INVALID_FD) {
+        if (fd != INVALID_FD) {//非定时器事件才需要入队
+            idle_queue_.push_back(event);
             table_[fd] = (--(idle_queue_.end()));
         }
     }
@@ -93,14 +93,19 @@ int EdnContext::ActiveEvent(int key) {
 }
 
 void EdnContext::Run() {
+    int timeout = listener_->GetTimeout();
     while (!done_) {
-        int timeout = 1000;
-        int ret = listener_->dispatch(timeout);
+        if (timeout < 0 && idle_queue_.empty()) {
+            EDN_LOG_WARN("no event to dispatch, exiting...");
+            sleep(1);// sleep 1s ,wait for active event handler;
+            return ;
+        }
+        int ret = listener_->dispatch(&timeout);
         if (ret < 0) {
             EDN_LOG_ERROR("epoll wait failed, errno:%d", errno);
             return;
         }
-        EDN_LOG_INFO("a round of event dispatch end...");
+        EDN_LOG_INFO("a round of event dispatch end... timeout:%d", timeout);
     }
 }
 

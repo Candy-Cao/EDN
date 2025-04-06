@@ -8,6 +8,7 @@
 #define EDN_EDN_EVENT_LISTENER_H
 
 #include "edn_event.h"
+#include "edn_timer_group.h"
 #include <memory>
 #include <cstdint>
 #include <sys/time.h>
@@ -17,12 +18,20 @@ namespace edn {
 class EdnEventListener {
 public:
     EdnEventListener() = default;
+    virtual ~EdnEventListener() = default;
     
     virtual int add(EdnEventPtr event) = 0;
     virtual int del(EdnEventPtr event) = 0;
-    virtual int dispatch(int timeout) = 0;
+    virtual int dispatch(int *timeout) = 0;
     
     virtual uint32_t convert_events(int events) = 0;
+
+    int GetTimeout() {
+        return timer_group_->GetMinTimeout();
+    }
+
+protected:
+    EdnTimerGroupPtr timer_group_ = nullptr;
 };
 
 typedef std::shared_ptr<EdnEventListener> EdnEventListenerPtr;
