@@ -14,8 +14,6 @@ class EdnUtils {
 public:
     static int GetUUID();
     
-    //设置非阻塞标志
-    static int SetNonBlocking(int fd);
 
     static int GetCurrentTime();
 };

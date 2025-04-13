@@ -18,13 +18,6 @@ int EdnUtils::GetUUID() {
     return s_uuid;
 }
 
-int EdnUtils::SetNonBlocking(int fd) {
-    int old_opt = fcntl(fd, F_GETFL);
-    int new_opt = old_opt | O_NONBLOCK;
-    fcntl(fd, F_SETFL, new_opt);
-    return old_opt;
-}
-
 int EdnUtils::GetCurrentTime()
 {
     struct timeval tv;

@@ -3,7 +3,7 @@
 
 namespace edn {
     
-EdnTimer::EdnTimer(int timeout, bool is_persist, std::function<void()> &&callback)
+EdnTimer::EdnTimer(int timeout, bool is_persist, std::function<void()> &&callback): EdnEvent()
 {
     timeout_ = timeout;
     expire_time_ = EdnUtils::GetCurrentTime() + timeout_;

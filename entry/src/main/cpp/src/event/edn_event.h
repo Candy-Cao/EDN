@@ -21,7 +21,11 @@ typedef enum {
     READ = 2,
     PERSIST = 4,
     SIGNAL = 8,
-    TIMEOUT = 16
+    TIMEOUT = 16,
+    ERROR = 32,
+    CLOSE = 64,
+    CONNECT = 128,
+    ET = 256,
 } EdnEventType;
 
 typedef enum {
@@ -29,10 +33,11 @@ typedef enum {
     ACTIVE,
 } EdnEventStatus;
 
-class EdnEvent {
+class EdnEvent: public std::enable_shared_from_this<EdnEvent> {
 public:
     EdnEvent();
     EdnEvent(int fd, unsigned int events);
+    ~EdnEvent() = default;
     
     virtual int handler() {status_ = IDLE; return EDN_OK;};
     void Active();

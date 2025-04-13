@@ -51,7 +51,7 @@ public:
     /**
      * 激活空闲事件
      */
-    int ActiveEvent(int key);
+    int ActiveEvent(int key, int events);
     
     /**
      * 事件分发主循环

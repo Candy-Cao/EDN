@@ -10,7 +10,9 @@
 #include "edn_log.h"
 #include "edn_signal.h"
 #include "edn_utils.h"
+#include "edn_io_event.h"
 #include "singleton.h"
+#include "edn_socket_utils.h"
 #include <cassert>
 #include <sys/socket.h>
 #include <errno.h>
@@ -25,8 +27,8 @@ EdnContext::EdnContext() {
     int ret = socketpair(PF_UNIX, SOCK_STREAM, 0, pipe_fds_);
     assert(ret != -1);
     EDN_LOG_INFO("create signal pipe success. write fd: %d, read fd: %d", pipe_fds_[1], pipe_fds_[0]);
-    EdnUtils::SetNonBlocking(pipe_fds_[1]);
-    EdnUtils::SetNonBlocking(pipe_fds_[0]);
+    SetNonBlocking(pipe_fds_[1]);
+    SetNonBlocking(pipe_fds_[0]);
     listener_ = std::make_shared<EdnEpoll>(this);
     config_ = Singleton<EdnConfig>::getInstance();
     thread_pool_ = std::make_shared<EdnThreadPool>(config_->work_thread_num);
@@ -73,7 +75,7 @@ void EdnContext::DelEvent(EdnEventPtr event) {
     assert(ret == 0);
 }
 
-int EdnContext::ActiveEvent(int key) {
+int EdnContext::ActiveEvent(int key, int events) {
     EdnEventPtr p = nullptr;
     {
         std::lock_guard<std::mutex> lock(idle_queue_mutex_);
@@ -83,9 +85,14 @@ int EdnContext::ActiveEvent(int key) {
             return EDN_ERR_PARAMS_INVALID;
         }
         p = *it->second;
+        if (p->GetFd() != GetSigFd()) {//IO事件激活
+            auto io_event = std::dynamic_pointer_cast<EdnIOEvent>(p);
+            events = io_event->ConvertEvents(events);
+            io_event->SetRealEvents(events);
+        }
         p->Active();
     }
-    EDN_LOG_INFO("event actived ,eventdId:%d, isPersist:%d, fd:%d", p->GetUUID(), p->IsPersist(), p->GetFd());
+    EDN_LOG_INFO("event actived ,eventdId:%d, isPersist:%d, fd:%d, events:%d", p->GetUUID(), p->IsPersist(), p->GetFd(), events);
     if (!p->IsPersist()) {
         DelEvent(p);
     }
@@ -107,6 +114,7 @@ void EdnContext::Run() {
         }
         EDN_LOG_INFO("a round of event dispatch end... timeout:%d", timeout);
     }
+    EDN_LOG_INFO("event loop exit.");
 }
 
 }

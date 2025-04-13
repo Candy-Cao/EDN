@@ -75,9 +75,9 @@ int EdnEpoll::add(EdnEventPtr event) {
         return EDN_OK;
     }
     ev.events = event->GetEvents();
-    EDN_LOG_INFO("add listen for fd:%d with event write:%d and read:%d to epfd:%d", ev.data.fd, ev.events & EPOLLOUT, ev.events & EPOLLIN, epfd_);
+    EDN_LOG_INFO("add listen for eventId:%d, fd:%d with event write:%d and read:%d to epfd:%d", event->GetUUID(), ev.data.fd, ev.events & EPOLLOUT, ev.events & EPOLLIN, epfd_);
     int ret = epoll_ctl(epfd_, EPOLL_CTL_ADD, ev.data.fd, &ev);
-    if (ret == EEXIST) {
+    if (ret == -1 && errno == EEXIST) {
         EDN_LOG_WARN("fd:%d already exist in epoll, modify it.", ev.data.fd);
         ret = epoll_ctl(epfd_, EPOLL_CTL_MOD, ev.data.fd, &ev);
     }
@@ -91,11 +91,14 @@ int EdnEpoll::add(EdnEventPtr event) {
 int EdnEpoll::del(EdnEventPtr event) {
     EDN_LOG_INFO("delete event, eventId:%d, fd:%d", event->GetUUID(), event->GetFd());
     if (event->GetFd() == INVALID_FD) {//定时器事件
+        auto timer = std::dynamic_pointer_cast<EdnTimer>(event);
+        timer_group_->DelTimer(timer);
         return EDN_OK;
     }
     if (event->GetFd() < 0) {
         auto sig_event = std::dynamic_pointer_cast<EdnSignal>(event);
         sigaction(sig_event->GetSignal(), sig_event->GetOldSigaction(), NULL);
+        EDN_LOG_INFO("delete signal %d from epoll.", sig_event->GetSignal());
         return EDN_OK;
     }
     int ret = epoll_ctl(epfd_, EPOLL_CTL_DEL, event->GetFd(), NULL);
@@ -107,6 +110,7 @@ int EdnEpoll::del(EdnEventPtr event) {
 
 int EdnEpoll::dispatch(int *timeout) {
     int max_event_num = GetContext()->GetConfig()->max_event_num;
+    EDN_LOG_INFO("epoll wait begin, timeout:%d", *timeout);
     int num = epoll_wait(epfd_, events_, max_event_num, *timeout);
     if (num == -1 && errno != EINTR) {
         EDN_LOG_ERROR("call epoll_wait error: %d", errno);
@@ -119,6 +123,11 @@ int EdnEpoll::dispatch(int *timeout) {
             continue;
         }
         //TODO:IO event dispatch
+        auto ret = context_->ActiveEvent(fd, events_[i].events);
+        if (ret != EDN_OK) {
+            EDN_LOG_ERROR("active event error: %d", ret);
+            return ret;
+        }
     }
     *timeout = timer_group_->Dispatch();
     return EDN_OK;
@@ -127,25 +136,28 @@ int EdnEpoll::dispatch(int *timeout) {
 uint32_t EdnEpoll::convert_events(int events) {
     int ev = 0;
     if (events & WRITE) {
-        ev |= (EPOLLOUT | EPOLLET | EPOLLONESHOT);
+        ev |= (EPOLLOUT| EPOLLONESHOT | EPOLLRDHUP);//EPOLLONESHOT：触发事件后需要重新注册到epoll上
     }
     if (events & READ) {
-        ev |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
+        ev |= (EPOLLIN| EPOLLONESHOT | EPOLLRDHUP);
     }
     if (events & SIGNAL) {
         ev |= EPOLLIN;
+    }
+    if (events & ET) {
+        ev |= EPOLLET;
     }
     return ev;
 }
 
 int EdnEpoll::DispatchSignal() {
-    char signals[1];//信号触发并不平凡，每次主循环激活一个信号事件；
+    char signals[1];//信号触发并不频繁，每次主循环激活一个信号事件；
     int num = read(context_->GetSigFd(), signals, sizeof(signals));
     if (num == -1) {
         EDN_LOG_ERROR("read signals error: %d", errno);
         return errno;
     }
-    context_->ActiveEvent(HASH(signals[0]));
+    context_->ActiveEvent(HASH(signals[0]), 0);
     return EDN_OK;
 }
 
