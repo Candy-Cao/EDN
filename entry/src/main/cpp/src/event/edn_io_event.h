@@ -11,6 +11,7 @@
 #include "edn_event.h"
 #include <memory>
 #include <functional>
+#include <atomic>
 
 
 namespace edn {
@@ -22,7 +23,7 @@ typedef std::function<int(void*)> EdnIOEventCallback;
  */
 class EdnIOEvent: public EdnEvent {
 public:
-    EdnIOEvent(int fd, bool et = true);
+    EdnIOEvent(int fd = INVALID_FD, bool et = true);
 
     EdnIOEvent(int fd, EdnIOEventCallback conn_cb,
                EdnIOEventCallback read_cb,
@@ -57,6 +58,10 @@ public:
         connect_status_ = status;
     }
 
+    ConnectStatus GetConnectStatus() {
+        return connect_status_;
+    }
+
     void SetConnCb(EdnIOEventCallback conn_cb) {
         conn_cb_ = conn_cb;
     }
@@ -73,14 +78,14 @@ public:
         close_cb_ = close_cb;
     }
 
-private:
+protected:
     static EdnIOEventCallback def_conn_cb;
     static EdnIOEventCallback def_read_cb;
     static EdnIOEventCallback def_write_cb;
     static EdnIOEventCallback def_error_cb;
     static EdnIOEventCallback def_close_cb;
     unsigned int real_events_ = 0;
-    ConnectStatus connect_status_ = NONE;
+    std::atomic<ConnectStatus> connect_status_ = NONE;
     EdnIOEventCallback conn_cb_;
     EdnIOEventCallback read_cb_;    
     EdnIOEventCallback write_cb_;

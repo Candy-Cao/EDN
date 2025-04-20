@@ -114,10 +114,6 @@ int EdnIOEvent::handler()
 
 void EdnIOEvent::SetRealEvents(unsigned int events)
 {
-    if (events == 0) {
-        real_events_ = 0;
-        return;
-    }
     real_events_ |= events;
 }
 

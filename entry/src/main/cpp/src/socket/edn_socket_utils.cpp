@@ -87,6 +87,7 @@ int Connect(int fd, const std::string ip, int port)
 int Close(int fd)
 {
     if (fd == -1) {
+        EDN_LOG_ERROR("socket is invalid.");
         return EDN_ERR_PARAMS_INVALID;
     }
     if (close(fd) == -1) {

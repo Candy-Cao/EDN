@@ -59,6 +59,7 @@ typedef enum EDN_CODE {
     EDN_ERR_SOCK_ERROR = -2,
     EDN_ERR_TIMEOUT = -3,
     EDN_ERR_SYS_ERROR = -4,
+    EDN_ERR_BUFFER_NOT_ENOUGH = -5,
 } EDN_CODE;
 
 typedef enum EDN_OPT_TYPE {
@@ -83,13 +84,14 @@ EDN_API void edn_run();
 //create a tcp connect ;return fd if success else EDN_CODE
 EDN_API int32_t edn_connect(EdnConnetInfo info, int timeout, pf_opt_complete_cb cb);
 
-//发送数据
+//发送数据，操作完成回调函数只会保持一个；如果设置了输出缓冲区低水位线，
+//则会在数据发送且缓冲区低于低水位线时触发回调函数；
 EDN_API EDN_CODE edn_send_data(int32_t connect_id, const char *buffer, int len, pf_opt_complete_cb cb);
 
-//异步数据处理函数
-typedef void (*pf_handle_data_cb)(const char* buffer, int len);
+//异步数据处理函数, 返回值表示已经处理的数据的长度
+typedef int32_t (*pf_handle_data_cb)(const char* buffer, int len);
 
-//数据包结束标志回调,返回0表示消息包没有结束;否则返回消息包的长度
+//数据包结束标志回调,返回0表示消息包没有结束;否则返回预计的消息包的长度
 typedef int32_t (*pf_message_package_end_cb)(const char* buffer, int len);
 
 EDN_API EDN_CODE edn_set_opt(int32_t connect_id, EDN_OPT_TYPE type, ...);
