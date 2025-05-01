@@ -136,10 +136,10 @@ int EdnEpoll::dispatch(int *timeout) {
 uint32_t EdnEpoll::convert_events(int events) {
     int ev = 0;
     if (events & WRITE) {
-        ev |= (EPOLLOUT| EPOLLONESHOT | EPOLLRDHUP);//EPOLLONESHOT：触发事件后需要重新注册到epoll上
+        ev |= (EPOLLOUT | EPOLLONESHOT | EPOLLRDHUP);//EPOLLONESHOT：触发事件后需要重新注册到epoll上
     }
     if (events & READ) {
-        ev |= (EPOLLIN| EPOLLONESHOT | EPOLLRDHUP);
+        ev |= (EPOLLIN | EPOLLONESHOT | EPOLLRDHUP);
     }
     if (events & SIGNAL) {
         ev |= EPOLLIN;

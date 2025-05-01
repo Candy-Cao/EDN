@@ -37,7 +37,15 @@ public:
      */
     int Close();
 
+    /**
+     * * @brief 设置数据处理回调
+     */
+    int SetHandleDataCallback(EdnHandleDataCallback cb);
 
+    /**
+     * * @brief 设置消息结束回调
+     */
+    int SetMessageEndCallback(EdnMessageEndCallback cb);
 
 private:
     static EdnIOEventCallback on_conn;

@@ -85,7 +85,7 @@ protected:
     static EdnIOEventCallback def_error_cb;
     static EdnIOEventCallback def_close_cb;
     unsigned int real_events_ = 0;
-    std::atomic<ConnectStatus> connect_status_ = NONE;
+    std::atomic<ConnectStatus> connect_status_{ConnectStatus::NONE};
     EdnIOEventCallback conn_cb_;
     EdnIOEventCallback read_cb_;    
     EdnIOEventCallback write_cb_;

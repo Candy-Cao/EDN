@@ -39,6 +39,11 @@ EdnContext::~EdnContext() {
     close(pipe_fds_[1]);
 }
 
+EdnContextPtr EdnContext::GetInstance()
+{
+    return Singleton<EdnContext>::getInstance();
+}
+
 void EdnContext::SigHandler(int sig) {
     int save_errno = errno;
     int msg = sig;
@@ -117,4 +122,14 @@ void EdnContext::Run() {
     EDN_LOG_INFO("event loop exit.");
 }
 
+EdnEventPtr EdnContext::GetEvent(int fd)
+{
+    std::lock_guard<std::mutex> lock(idle_queue_mutex_);
+    auto it = table_.find(fd);
+    if (it == table_.end()) {
+        EDN_LOG_ERROR("event not find ,fd:", fd);
+        return nullptr;
+    }
+    return *(it->second);
+}
 }

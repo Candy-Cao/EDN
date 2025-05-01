@@ -76,5 +76,11 @@ int Connect(int fd, const std::string ip, int port);
  * * @return EDN_OK on success, else on error
  */
 int Close(int fd);
+/**
+ * * @brief 获取当前文件描述符上可读取的字节数
+ * * @param fd 文件描述符
+ * * @return 可读取的字节数或-1表示出错
+ */
+int GetReadableBytes(int fd);
 }
 #endif

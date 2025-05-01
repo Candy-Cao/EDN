@@ -18,6 +18,7 @@ public:
     
     int add(EdnEventPtr event) override ;
     int del(EdnEventPtr event) override ;
+
     int dispatch(int *timeout) override ;
     
     uint32_t convert_events(int events) override ;

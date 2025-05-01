@@ -75,10 +75,22 @@ EdnIOEvent::~EdnIOEvent()
 
 int EdnIOEvent::handler()
 {
+    if (real_events_ & EdnEventType::CONNECT) {
+        context_.lock()->GetThreadPool()->enqueue([&](void* p) {
+            conn_cb_(this);
+            SetEvents(EdnEventType::READ);//再次注册读事件
+            auto ret = context_.lock()->GetListener()->add(shared_from_this());//重新注册事件
+            if (ret != EDN_OK) {
+                EDN_LOG_ERROR("conn_cb_ end, add event error: %d", ret);
+            }
+        }, this);
+    }
     if (real_events_ & EdnEventType::READ) {
         context_.lock()->GetThreadPool()->enqueue([&](void* p) {
             read_cb_(this);
+            SetEvents(EdnEventType::READ);//再次注册读事件
             auto ret = context_.lock()->GetListener()->add(shared_from_this());//重新注册事件
+            EDN_LOG_DEBUG("read_cb_ end, add read event again, fd: %d, events: %d", GetFd(), events_.load());
             if (ret != EDN_OK) {
                 EDN_LOG_ERROR("read_cb_ end, add event error: %d", ret);
             }
@@ -88,17 +100,9 @@ int EdnIOEvent::handler()
         context_.lock()->GetThreadPool()->enqueue([&](void* p) {
             write_cb_(this);
             auto ret = context_.lock()->GetListener()->add(shared_from_this());//重新注册事件
+            EDN_LOG_DEBUG("write_cb_ end, add write event again, fd: %d, events: %d", GetFd(), events_.load());
             if (ret != EDN_OK) {
                 EDN_LOG_ERROR("write_cb_ end, add event error: %d", ret);
-            }
-        }, this);
-    }
-    if (real_events_ & EdnEventType::CONNECT) {
-        context_.lock()->GetThreadPool()->enqueue([&](void* p) {
-            conn_cb_(this);
-            auto ret = context_.lock()->GetListener()->add(shared_from_this());//重新注册事件
-            if (ret != EDN_OK) {
-                EDN_LOG_ERROR("conn_cb_ end, add event error: %d", ret);
             }
         }, this);
     }
@@ -127,10 +131,12 @@ int EdnIOEvent::ConvertEvents(unsigned int events)
     if (events & EPOLLOUT) {
         ev |=  EdnEventType::WRITE;
         connect_status_ = ConnectStatus::WRITE;
+        SetEvents(EdnEventType::WRITE, false);//清除写事件,为防止多线程情况下一个fd的读写事件被多个线程同时触发，造成数据混乱；再此清空读/写事件，后续在各自的事件触发回调函数中重新注册读写事件；
     }
     if (events & EPOLLIN) {
         ev |= EdnEventType::READ;
         connect_status_ = ConnectStatus::READ;
+        SetEvents(EdnEventType::READ, false);//清除读事件,为防止多线程情况下一个fd的读写事件被多个线程同时触发，造成数据混乱；再此清空读/写事件，后续在各自的事件触发回调函数中重新注册读写事件；
     }
     if (events & (EPOLLHUP | EPOLLRDHUP)) {
         ev |= EdnEventType::CLOSE;

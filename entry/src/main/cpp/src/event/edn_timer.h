@@ -15,7 +15,7 @@
 namespace edn {
 class EdnTimer: public EdnEvent {
 public:
-    EdnTimer(int timeout, bool is_persist, std::function<void()> &&callback);
+    EdnTimer(int timeout, bool is_persist, std::function<void()> &&callback = nullptr);
     
     
     int handler() override ;

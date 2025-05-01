@@ -78,6 +78,8 @@ typedef struct EdnConnetInfo {
     uint32_t dst_port;
 } EdnConnectInfo;
 
+#define EDN_CONNECT_INFO_INIT {NULL, 0, NULL, 0}
+
 // event loop
 EDN_API void edn_run();
 
@@ -92,7 +94,7 @@ EDN_API EDN_CODE edn_send_data(int32_t connect_id, const char *buffer, int len, 
 typedef int32_t (*pf_handle_data_cb)(const char* buffer, int len);
 
 //数据包结束标志回调,返回0表示消息包没有结束;否则返回预计的消息包的长度
-typedef int32_t (*pf_message_package_end_cb)(const char* buffer, int len);
+typedef size_t (*pf_message_package_end_cb)(const char* buffer, int len);
 
 EDN_API EDN_CODE edn_set_opt(int32_t connect_id, EDN_OPT_TYPE type, ...);
 

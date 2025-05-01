@@ -7,7 +7,9 @@
 #ifndef EDN_EDN_CONFIG_H
 #define EDN_EDN_CONFIG_H
 
+#include "edn_define.h"
 #include <memory>
+
 namespace edn {
 #define DEFAULT_MAX_EVENT_NUM 1024
 #define DEFAULTWORK_THREAD_NUM 8

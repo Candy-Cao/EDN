@@ -12,6 +12,7 @@
 #include "edn_utils.h"
 #include "edn.h"
 #include <memory>
+#include <atomic>
 
 namespace edn {
 class EdnContext;
@@ -45,6 +46,13 @@ public:
         return fd_;
     }
     unsigned int GetEvents();
+    void SetEvents(unsigned int events, bool add = true) {
+        if (add) {
+            events_ |= events;
+        } else {
+            events_ &= ~events;
+        }
+    }
     std::shared_ptr<EdnContext> GetContext() {
         return context_.lock();
     }
@@ -58,7 +66,7 @@ public:
     }
 protected:
     int fd_;
-    unsigned int events_;
+    std::atomic<unsigned int> events_;
     std::weak_ptr<EdnContext> context_; 
     unsigned int eventId_ = EdnUtils::GetUUID();
     int status_ = IDLE;  

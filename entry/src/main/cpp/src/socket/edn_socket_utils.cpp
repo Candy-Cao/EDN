@@ -1,6 +1,8 @@
 #include "edn_socket_utils.h"
 #include "edn.h"
 #include "edn_log.h"
+#include "edn_define.h"
+#include <sys/ioctl.h>
 
 
 namespace edn {
@@ -94,5 +96,17 @@ int Close(int fd)
         return EDN_ERR_SYS_ERROR;
     }
     return EDN_OK;
+}
+
+int GetReadableBytes(int fd)
+{
+#if defined(FIONREAD)
+	int n = DEFAULT_MIN_BUFFER_NODE_LEN;
+	if (ioctl(fd, FIONREAD, &n) < 0)
+		return -1;
+	return n;
+#else
+    return DEFAULT_MIN_BUFFER_NODE_LEN;
+#endif
 }
 }

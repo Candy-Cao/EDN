@@ -24,6 +24,8 @@ public:
     EdnContext();
     
     ~EdnContext();
+
+    static std::shared_ptr<EdnContext> GetInstance();
     
     //信号处理函数
     static void SigHandler(int sig);
@@ -64,6 +66,11 @@ public:
     void Stop() {
         done_ = true;
     }
+
+    /**
+     * 获取事件句柄
+     */
+    EdnEventPtr GetEvent(int fd);
     
 private:
     EdnEventListenerPtr listener_;
