@@ -63,7 +63,7 @@ EdnIOEventCallback EdnConnect::on_error = [](void* p)->int {
         that->Close();
         return EDN_ERR_SYS_ERROR;
     }
-    EDN_LOG_ERROR("socket error: %d, errno:%d", error, errno);
+    EDN_LOG_ERROR("socket error: %d, errmsg:%s", error, strerror(error));
     that->output_buffer_->CallBack({EDN_ERR_SOCK_ERROR, error, strerror(error)});
     that->Close();
     that->GetContext()->DelEvent(that->shared_from_this());
