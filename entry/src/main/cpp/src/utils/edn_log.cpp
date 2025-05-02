@@ -1,8 +1,8 @@
 #include "edn_log.h"
+#include "edn_utils.h"
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
-
 
 namespace edn {
 EdnLogger* EdnLogger::GetInstanse() {
@@ -14,13 +14,12 @@ void EdnLogger::Log(int level, const char* file, int line, const char* func, con
     if (log_cb && level >= this->level) {
         char message[MAX_LOG_LEN] = {0};
         char formatted_message[MAX_LOG_LEN] = {0};
-
         va_list args;
         va_start(args, format);
         vsnprintf(message, sizeof(message), format, args);
         va_end(args);
 
-        snprintf(formatted_message, sizeof(formatted_message), "[%s:%d][%s][%s] %s\n", file, line, func, GetLevelStr(level), message);
+        snprintf(formatted_message, sizeof(formatted_message), "[%s][%s:%d][%s][%s] %s\n",EdnUtils::GetTimeStamp().c_str(), file, line, func, GetLevelStr(level), message);
         log_cb("%s", formatted_message);
     }
 }

@@ -34,7 +34,7 @@ int main() {
     EdnConnectInfo conn_info = EDN_CONNECT_INFO_INIT;
     conn_info.dst_ip = "127.0.0.1";
     conn_info.dst_port = 8080;
-    auto conn_id = edn_connect(conn_info, 5, [](int32_t error) {
+    auto conn_id = edn_connect(conn_info, 5000, [](int32_t error) {
         if (error != EDN_OK) {
             EDN_LOG_ERROR("Connection error: %d", error);
         } else {

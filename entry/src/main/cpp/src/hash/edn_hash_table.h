@@ -49,7 +49,6 @@ public:
 
     void Clear();
 
-    static EdnConnectInfo ConnectInfoNomalize(const EdnConnectInfo& info);
 private:
     std::unordered_map<EdnConnectInfo, int> hash_table_;
     std::mutex mutex_;

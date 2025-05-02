@@ -209,8 +209,10 @@ void EdnBuffer::SetCallback(EdnAsyncOptCallback cb)
 
 void EdnBuffer::CallBack(EdnError err)
 {
+    EDN_LOG_DEBUG("Enter EdnBuffer::CallBack");
     std::lock_guard<std::mutex> lock(buffer_mutex_);
     if (cb_) {
+        EDN_LOG_DEBUG("begin call EdnAsyncOptCallback");
         cb_(err);
     }
 }
@@ -262,6 +264,7 @@ int EdnBuffer::SendAtMost(int fd)
     while (node != nullptr) {
         if (node->len > 0) {
             ssize_t ret = send(fd, node->data + node->offset, node->len, 0);
+            EDN_LOG_DEBUG("send data frame, len: %zu, offset: %zu, ret:%d", node->len, node->offset, ret);
             if (ret == -1) {
                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
                     EDN_LOG_INFO("send data would block");

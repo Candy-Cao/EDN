@@ -40,7 +40,10 @@ int32_t edn_connect(EdnConnetInfo info, int timeout, pf_opt_complete_cb cb) {
         EDN_LOG_WARN("connect already exist, connect_id: %d", fd);
         return fd;
     }
-    auto conn = std::make_shared<EdnConnect>(info.dst_ip, info.dst_port);
+    auto conn = std::make_shared<EdnConnect>(info, [=] (EdnError err) {
+        cb(err.edn_code);
+    });
+    free_connect_info(info);
     auto ctx = EdnContext::GetInstance();
     ctx->AddEvent(conn);
     auto timer = std::make_shared<EdnTimer>(timeout, false);
@@ -62,6 +65,10 @@ EDN_CODE edn_send_data(int32_t connect_id, const char *buffer, int len, pf_opt_c
     EDN_LOG_DEBUG("send data, connect_id: %d, len: %d", connect_id, len);
     auto ctx = EdnContext::GetInstance();
     auto it = std::dynamic_pointer_cast<EdnConnect>(ctx->GetEvent(connect_id));
+    if (it == nullptr) {
+        EDN_LOG_ERROR("connect_id : %d not found, may be closed or other error.", connect_id);
+        return EDN_ERR_SOCK_ERROR;
+    }
     it->SendData(buffer, len, [cb] (EdnError err) {
         if (err.edn_code != EDN_OK) {
             EDN_LOG_ERROR("send data error: %d, errno: %d", err.edn_code, err.sys_code);

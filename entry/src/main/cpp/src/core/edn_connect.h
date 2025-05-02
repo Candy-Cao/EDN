@@ -24,7 +24,7 @@ class EdnConnect: public EdnIOEvent {
 public:
     EdnConnect(const std::string& ip, int port);
 
-    EdnConnect(const EdnConnectInfo&);
+    EdnConnect(const EdnConnectInfo&, EdnAsyncOptCallback cb);
     EdnConnect(const EdnConnect&) = delete;
     EdnConnect& operator=(const EdnConnect&) = delete;
     EdnConnect(EdnConnect&&) = delete;

@@ -5,6 +5,8 @@ project(edn)
 
 set(CMAKE_CXX_STANDARD 11)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wall ")
+
 #set(CMAKE_TOOLCHAIN_FILE "D:\\SoftWare\\DevEco Studio\\sdk\\default\\openharmony\\native\\build\\cmake\\ohos.toolchain.cmake")
 
 include_directories(

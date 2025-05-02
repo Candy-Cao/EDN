@@ -60,7 +60,7 @@ int BindV4(int fd, const std::string &ip, int port)
     addr_in.sin_family = AF_INET;
     addr_in.sin_port = htons(port);
     if (inet_pton(AF_INET, ip.c_str(), &addr_in.sin_addr) <= 0) {
-        EDN_LOG_ERROR("inet_pton error: %s, ip:%s, port:%d", strerror(errno), ip.c_str(), port);
+        EDN_LOG_ERROR("inet_pton error: %d, ip:%s, port:%d", errno, ip.c_str(), port);
         return EDN_ERR_SYS_ERROR;
     }
     return Bind(fd, (const sockaddr *)&addr_in, sizeof(addr_in));

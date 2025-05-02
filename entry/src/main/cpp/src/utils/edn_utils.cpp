@@ -24,4 +24,18 @@ int EdnUtils::GetCurrentTime()
     gettimeofday(&tv, NULL);
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
+// 获取当前时间戳
+// 返回格式：2023-10-01 12:00:00.000
+std::string EdnUtils::GetTimeStamp()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    time_t now = tv.tv_sec;
+    struct tm *tm_now = localtime(&now);
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d.%03ld",
+             tm_now->tm_year + 1900, tm_now->tm_mon + 1, tm_now->tm_mday,
+             tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, tv.tv_usec / 1000);
+    return std::string(buffer);
+}
 }

@@ -102,7 +102,8 @@ int EdnEpoll::del(EdnEventPtr event) {
         return EDN_OK;
     }
     int ret = epoll_ctl(epfd_, EPOLL_CTL_DEL, event->GetFd(), NULL);
-    if (ret == -1) {
+    if (ret == -1 && errno != EBADF) {
+        EDN_LOG_ERROR("syscall epoll_ctl failed, ret:%d, errno:%d", ret, errno);
         return EDN_ERR_SYS_ERROR;
     }
     return EDN_OK;

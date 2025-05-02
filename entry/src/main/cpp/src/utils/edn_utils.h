@@ -6,6 +6,7 @@
 
 #ifndef EDN_EDN_UTILS_H
 #define EDN_EDN_UTILS_H
+#include <string>
 
 namespace edn {
 
@@ -16,6 +17,8 @@ public:
     
 
     static int GetCurrentTime();
+
+    static std::string GetTimeStamp();
 };
 }
 #endif //EDN_EDN_UTILS_H

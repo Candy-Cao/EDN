@@ -124,6 +124,16 @@ void EdnIOEvent::SetRealEvents(unsigned int events)
 int EdnIOEvent::ConvertEvents(unsigned int events)
 {
     unsigned int ev = 0;
+    if (events & EPOLLERR) {
+        ev |= EdnEventType::ERROR;
+        connect_status_ = ConnectStatus::ERROR;
+        return ev;
+    }
+    if (events & (EPOLLHUP | EPOLLRDHUP)) {
+        ev |= EdnEventType::CLOSE;
+        connect_status_ = ConnectStatus::CLOSE;
+        return ev;
+    }
     if (events & EPOLLOUT && connect_status_ == ConnectStatus::CONNECTING) {
         ev |= EdnEventType::CONNECT;
         connect_status_ = ConnectStatus::CONNECTED;
@@ -137,14 +147,6 @@ int EdnIOEvent::ConvertEvents(unsigned int events)
         ev |= EdnEventType::READ;
         connect_status_ = ConnectStatus::READ;
         SetEvents(EdnEventType::READ, false);//清除读事件,为防止多线程情况下一个fd的读写事件被多个线程同时触发，造成数据混乱；再此清空读/写事件，后续在各自的事件触发回调函数中重新注册读写事件；
-    }
-    if (events & (EPOLLHUP | EPOLLRDHUP)) {
-        ev |= EdnEventType::CLOSE;
-        connect_status_ = ConnectStatus::CLOSE;
-    }
-    if (events & EPOLLERR) {
-        ev |= EdnEventType::ERROR;
-        connect_status_ = ConnectStatus::ERROR;
     }
     
     return ev;
