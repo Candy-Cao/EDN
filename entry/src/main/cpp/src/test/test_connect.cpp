@@ -46,7 +46,7 @@ int main() {
         return -1;
     }
     // Set the handle data callback
-    // edn_set_opt(conn_id, EDN_OPT_TYPE_HANDLE_DATA_CB, handle_data_cb);
+    edn_set_opt(conn_id, EDN_OPT_TYPE_HANDLE_DATA_CB, handle_data_cb);
     // Set the message end callback
     edn_set_opt(conn_id, EDN_OPT_TYPE_MESSAGE_END_CB, message_end_cb);
     // Send data
@@ -65,7 +65,5 @@ int main() {
     ctx->AddEvent(timer);
     // Run the event loop   
     edn_run();
-
-    
 
 }

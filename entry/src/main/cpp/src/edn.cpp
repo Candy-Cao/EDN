@@ -3,20 +3,54 @@
 #include "edn_connect.h"
 #include "edn_context.h"
 #include "edn_define.h"
+#include "edn_hash_table.h"
+#include <cstring>
 #include "cstdarg"
 
 using namespace edn;
 
-void edn_run() {
+EdnConnetInfo copy_connect_info(EdnConnetInfo info)
+{
+    return {strdup(info.src_ip), info.src_port, strdup(info.dst_ip), info.dst_port};
+}
+
+void free_connect_info(EdnConnetInfo info)
+{
+    if (info.src_ip != nullptr) {
+        free((void*)info.src_ip);
+    }
+    if (info.dst_ip != nullptr) {
+        free((void*)info.dst_ip);
+    }
+    info.src_ip = nullptr;
+    info.dst_ip = nullptr;
+}
+
+void edn_run()
+{
     auto ctx = EdnContext::GetInstance();
     ctx->Run();
     EDN_LOG_INFO("edn run");
 }
 
 int32_t edn_connect(EdnConnetInfo info, int timeout, pf_opt_complete_cb cb) {
+    info = EdnConnect::ConnectInfoNomalize(info);
+    int fd = EdnConnect::conn_table->Get(info);
+    if (fd != -1) {
+        EDN_LOG_WARN("connect already exist, connect_id: %d", fd);
+        return fd;
+    }
     auto conn = std::make_shared<EdnConnect>(info.dst_ip, info.dst_port);
     auto ctx = EdnContext::GetInstance();
     ctx->AddEvent(conn);
+    auto timer = std::make_shared<EdnTimer>(timeout, false);
+    timer->SetCallback([=]() {
+        EDN_LOG_ERROR("connect timeout");
+        conn->Close();
+        cb(EDN_ERR_TIMEOUT);
+        EdnContext::GetInstance()->DelEvent(conn);
+    });
+    conn->SetTimer(timer);
     return conn->GetFd();
 }
 

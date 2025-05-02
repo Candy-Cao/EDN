@@ -16,6 +16,9 @@ namespace edn {
 #define DEFAULT_READ_LOW_WATER_MARK 4096
 #define DEFAULT_READ_HIGH_WATER_MARK 4096
 
+#define DEFAULT_IVP6_ADDR "::"
+#define DEFAULT_IVP4_ADDR "0.0.0.0"
+
 struct EdnError {
     int edn_code;
     int sys_code;

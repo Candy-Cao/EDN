@@ -9,6 +9,9 @@
 #ifndef EDN_EDN_SOCKET_UTILS_H
 #define EDN_EDN_SOCKET_UTILS_H
 
+#include "edn_define.h"
+#include "edn_log.h"
+#include "edn.h"
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -38,7 +41,38 @@ int Socket(bool use_ipv6 = false);
  *  @return EDN_OK on success, else on error
  */
 int ConnectV4(int fd, const struct sockaddr *addr, socklen_t addrlen);
-
+/**
+ * @brief Bind local ip&port to a socket
+ * @param fd Socket file descriptor
+ * @param addr Address to bind with
+ * @param addrlen Length of the address structure
+ * @return EDN_OK on success, else on error
+ */
+int Bind(int fd, const struct sockaddr *addr, socklen_t addrlen);
+/**
+ * @brief Bind local ip&port to a socket
+ * @param fd Socket file descriptor
+ * @param ip ipv4 Address to bind with
+ * @param port Port number
+ * @return EDN_OK on success, else on error
+ */
+int BindV4(int fd, const std::string &ip, int port = 0);
+/**
+ * @brief Bind local ip&port to a socket
+ * @param fd Socket file descriptor
+ * @param addr ipv6 Address to bind with
+ * @param port Port number
+ * @return EDN_OK on success, else on error
+ */
+int BindV6(int fd, const std::string &addr, int port = 0);
+/**
+ * @brief Bind local ip&port to a socket
+ * @param fd Socket file descriptor
+ * @param addr ip Address to bind with
+ * @param port Port number
+ * @return EDN_OK on success, else on error
+ */
+int Bind(int fd, const std::string &ip, int port);
 /**
  * @brief Conect to a socket
  * @param addr IP address
@@ -82,5 +116,27 @@ int Close(int fd);
  * * @return 可读取的字节数或-1表示出错
  */
 int GetReadableBytes(int fd);
+/**
+ * * @brief 获取当前默认网卡的ipv4地址
+ */
+std::string GetDefaultIpV4();
+/**
+ * * @brief 获取当前默认网卡的ipv6地址
+ */
+std::string GetDefaultIpV6();
+/**
+ * * @brief 获取当前已经握手成功的fd的连接信息;
+ * * @param fd 文件描述符
+ * * @param is_ipv6 是否ipv6
+ * * @return 连接信息EdnConnectInfo,使用后需主动释放
+ */
+EdnConnectInfo GetRealConnectInfo(int fd, bool is_ipv6 = false);
+/**
+ * 判断当前ip是否是ipv6
+ * @param ip 地址
+ * @return true 是ipv6 false 不是
+ */
+bool IsIpV6(const std::string &ip);
+
 }
 #endif

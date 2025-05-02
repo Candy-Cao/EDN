@@ -28,6 +28,22 @@ void BufferNode::Write(const char *data, size_t len)
     return;
 }
 
+int32_t EdnBuffer::DefaultHandleDataCb(const char* data, int len) {
+    EDN_LOG_DEBUG("default handle data cb");
+    if (len > 0) {
+        std::string tmp(data, len);
+        EDN_LOG_DEBUG("handle len:%d data: %s", len, tmp.c_str());
+    } else {
+        EDN_LOG_INFO("handle data is empty");
+    }
+    return len;
+}
+
+size_t EdnBuffer::DefaultMessageEndCb(const char* data, int len) {
+    EDN_LOG_DEBUG("default message end cb, len: %d", len);
+    return len;
+}
+
 EdnBuffer::EdnBuffer()
 {
     int capacity = Singleton<EdnConfig>::getInstance()->buffer_len;
@@ -36,24 +52,8 @@ EdnBuffer::EdnBuffer()
     capacity_ = capacity;
     head_ = nullptr;
     tail_ = nullptr;
-    handle_data_cb_ = [](const char* data, int len)->int32_t {
-        EDN_LOG_DEBUG("default handle data cb");
-        if (len > 0) {
-            char* tmp = new char[len + 1];
-            memcpy(tmp, data, len);
-            tmp[len] = '\0';
-            EDN_LOG_DEBUG("handle len:%d data: %s", len, tmp);
-            delete[] tmp;
-        }
-        else {
-            EDN_LOG_INFO("handle data is empty");
-        }
-        return len;
-    };
-    message_end_cb_ = [](const char* data, int len)->size_t {
-        EDN_LOG_DEBUG("default message end cb, len: %d", len);
-        return len;
-    };
+    handle_data_cb_ = &DefaultHandleDataCb;
+    message_end_cb_ = &DefaultMessageEndCb;
 }
 
 EdnBuffer::~EdnBuffer()
@@ -221,7 +221,7 @@ void EdnBuffer::SetCallback(EdnHandleDataCallback cb)
     handle_data_cb_ = cb;
 }
 
-void EdnBuffer::SetCallback(EdnHandleMessageEndCallback cb)
+void EdnBuffer::SetCallback(EdnMessageEndCallback cb)
 {
     std::lock_guard<std::mutex> lock(buffer_mutex_);
     message_end_cb_ = cb;

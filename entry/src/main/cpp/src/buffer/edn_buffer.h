@@ -17,7 +17,7 @@ namespace edn {
 
 typedef std::function<void(EdnError)> EdnAsyncOptCallback;
 typedef std::function<int32_t(const char*, int)> EdnHandleDataCallback;
-typedef std::function<size_t(const char*, int)> EdnHandleMessageEndCallback;
+typedef std::function<size_t(const char*, int)> EdnMessageEndCallback;
 
 struct BufferNode {
     BufferNode* next = nullptr;
@@ -64,7 +64,7 @@ public:
 
     void SetCallback(EdnHandleDataCallback cb);
 
-    void SetCallback(EdnHandleMessageEndCallback cb);
+    void SetCallback(EdnMessageEndCallback cb);
 
     int GetSize();
 
@@ -74,6 +74,10 @@ public:
     int GetHighWaterMark();
 
     int GetLowWaterMark();
+
+    static int32_t DefaultHandleDataCb(const char* data, int len);
+
+    static size_t DefaultMessageEndCb(const char* data, int len);
     
 private:
 
@@ -87,7 +91,7 @@ private:
     size_t capacity_;       //缓冲区容量
     EdnAsyncOptCallback cb_ = nullptr;
     EdnHandleDataCallback handle_data_cb_ = nullptr;
-    EdnHandleMessageEndCallback message_end_cb_ = nullptr;
+    EdnMessageEndCallback message_end_cb_ = nullptr;
     int high_water_mark_ = 0; //缓冲区高水位线
     int low_water_mark_ = 0;  //缓冲区低水位线
     BufferNode* head_ = nullptr; //缓冲区头节点

@@ -6,8 +6,14 @@
 
 namespace edn {
 
+EdnHashTablePtr EdnConnect::conn_table = std::make_shared<EdnHashTable>();
+
 EdnIOEventCallback EdnConnect::on_conn = [](void* p)->int {
-    EDN_LOG_INFO("EdnConnect default conn cb");
+    auto that = (EdnConnect*)p;
+    that->SetConnectInfo(GetRealConnectInfo(that->fd_));
+    EDN_LOG_INFO("EdnConnect default conn cb, %s", that->Format(that->GetConnectInfo()).c_str());
+    that->conn_table->Insert(that->GetConnectInfo(), that->GetFd());
+    that->GetContext()->DelEvent(that->GetTimer());
     return EDN_OK;
 };
 
@@ -95,6 +101,49 @@ EdnConnect::EdnConnect(const std::string &ip, int port)
     input_buffer_ = std::make_shared<EdnBuffer>();
     output_buffer_ = std::make_shared<EdnBuffer>();
 
+    connect_info_ = EDN_CONNECT_INFO_INIT;
+
+}
+
+EdnConnect::EdnConnect(const EdnConnectInfo &info)
+{
+    connect_info_ = EDN_CONNECT_INFO_INIT;
+    fd_ = Socket();
+    if (fd_ == -1) {
+        EDN_LOG_ERROR("Failed to create socket");
+        return;
+    }
+    // Bind local ip&port to a socket
+    int ret = Bind(fd_, info.src_ip, info.src_port);
+    if (ret != EDN_OK) {
+        EDN_LOG_ERROR("Failed to bind local ip&port");
+        close(fd_);
+        return;
+    }
+    // Connect to a server
+    ret = Connect(fd_, info.dst_ip, info.dst_port);
+    if (ret != EDN_OK) {
+        EDN_LOG_ERROR("Failed to connect to server");
+        close(fd_);
+        return;
+    }
+
+    conn_cb_ = on_conn;
+    read_cb_ = on_read;
+    write_cb_ = on_write;
+    error_cb_ = on_error;
+    close_cb_ = on_close;
+
+    input_buffer_ = std::make_shared<EdnBuffer>();
+    output_buffer_ = std::make_shared<EdnBuffer>();
+}
+
+EdnConnect::~EdnConnect()
+{
+    free_connect_info(connect_info_);
+
+    Close();
+
 }
 
 int EdnConnect::SendData(const char *data, size_t len, EdnAsyncOptCallback cb)
@@ -128,6 +177,7 @@ int EdnConnect::SendData(const char *data, size_t len, EdnAsyncOptCallback cb)
 int EdnConnect::Close()
 {
     return edn::Close(fd_);
+    fd_ = INVALID_FD;
 }
 
 int EdnConnect::SetHandleDataCallback(EdnHandleDataCallback cb)
@@ -154,5 +204,61 @@ int EdnConnect::SetMessageEndCallback(EdnMessageEndCallback cb)
     return EDN_OK;
 }
 
+std::string EdnConnect::Format(const EdnConnectInfo &info)
+{
+    std::string result("Connect info:\n");
+    if (info.src_ip) {
+        result += "src_ip: " + std::string(info.src_ip) + "\n";
+    }
+    if (info.src_port) {
+        result += "src_port: " + std::to_string(info.src_port) + "\n";
+    }
+    if (info.dst_ip) {
+        result += "dst_ip: " + std::string(info.dst_ip) + "\n";
+    }
+    if (info.dst_port) {
+        result += "dst_port: " + std::to_string(info.dst_port) + "\n";
+    }
+    return result;
+}
 
+void EdnConnect::SetConnectInfo(const EdnConnectInfo &info)
+{
+    connect_info_ = copy_connect_info(ConnectInfoNomalize(info));
+
+}
+
+EdnConnectInfo EdnConnect::GetConnectInfo() const
+{
+    return connect_info_;
+}
+
+void EdnConnect::SetTimer(EdnTimerPtr timer)
+{
+    timer_ = timer;
+}
+
+EdnTimerPtr EdnConnect::GetTimer() const
+{
+    return timer_;
+}
+
+EdnConnectInfo EdnConnect::ConnectInfoNomalize(const EdnConnectInfo &info)
+{
+    auto copy = info;
+    if (copy.src_ip == nullptr || copy.src_ip[0] == '\0') {
+        if (IsIpV6(info.dst_ip)) {
+            copy.src_ip = GetDefaultIpV6().c_str();
+        } else {
+            copy.src_ip = GetDefaultIpV4().c_str();
+        }
+    }
+    else if (std::string(copy.src_ip) == DEFAULT_IVP4_ADDR) {
+        copy.src_ip = GetDefaultIpV4().c_str();
+    }
+    else if (std::string(copy.src_ip) == DEFAULT_IVP6_ADDR) {
+        copy.src_ip = GetDefaultIpV6().c_str();
+    }
+    return copy;
+}
 }

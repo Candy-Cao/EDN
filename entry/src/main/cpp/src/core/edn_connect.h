@@ -13,19 +13,23 @@
 #include "edn_io_event.h"
 #include "edn_buffer.h"
 #include "edn_define.h"
+#include "edn_hash_table.h"
+#include "edn_timer.h"
 
 
 namespace edn {
 
 
-typedef std::function<int(const char*, int)> EdnHandleDataCallback;
-
-typedef std::function<int(const char*, int)> EdnMessageEndCallback;
-
 class EdnConnect: public EdnIOEvent {
 public:
     EdnConnect(const std::string& ip, int port);
-    ~EdnConnect() = default;
+
+    EdnConnect(const EdnConnectInfo&);
+    EdnConnect(const EdnConnect&) = delete;
+    EdnConnect& operator=(const EdnConnect&) = delete;
+    EdnConnect(EdnConnect&&) = delete;
+    EdnConnect& operator=(EdnConnect&&) = delete;
+    ~EdnConnect();
 
     /**
      * * @brief 异步发数据
@@ -47,6 +51,40 @@ public:
      */
     int SetMessageEndCallback(EdnMessageEndCallback cb);
 
+    /**
+     * * @brief 格式化连接信息
+     */
+    static std::string Format(const EdnConnectInfo &info);
+
+    /**
+     * * @brief 设置连接信息
+     */
+    void SetConnectInfo(const EdnConnectInfo &info);
+
+    /**
+     * * @brief 获取连接信息
+     */
+    EdnConnectInfo GetConnectInfo() const;
+
+    /**
+     * * @brief 设置连接超时定时器
+     */
+    void SetTimer(EdnTimerPtr timer);
+
+    /**
+     * * @brief 获取连接超时定时器
+     */
+    EdnTimerPtr GetTimer() const;
+
+    /**
+     * * @brief 规范化连接信息
+     */
+    static EdnConnectInfo ConnectInfoNomalize(const EdnConnectInfo &info);
+
+public:
+
+    static EdnHashTablePtr conn_table; //哈希表，用于存储连接信息和文件描述符的映射关系
+
 private:
     static EdnIOEventCallback on_conn;
     static EdnIOEventCallback on_read;
@@ -57,6 +95,9 @@ private:
     std::shared_ptr<EdnBuffer> input_buffer_;        //输入缓冲区，用于读取数据
     std::shared_ptr<EdnBuffer> output_buffer_;       //输出缓冲区，用于发送数据
 
+    EdnConnectInfo connect_info_; //连接信息
+
+    EdnTimerPtr timer_; //定时器，用于连接超时处理
 };
 
 }

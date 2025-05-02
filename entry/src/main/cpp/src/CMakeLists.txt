@@ -35,6 +35,7 @@ add_executable(test_thread_pool ${TEST_THREAD_POOL_SRC})
 add_executable(test_timer ${CMAKE_CURRENT_SOURCE_DIR}/test/test_timer.cpp)
 add_executable(test_io ${CMAKE_CURRENT_SOURCE_DIR}/test/test_io_event.cpp)
 add_executable(test_connect ${CMAKE_CURRENT_SOURCE_DIR}/test/test_connect.cpp)
+add_executable(test_utils ${CMAKE_CURRENT_SOURCE_DIR}/test/test_utils.cpp)
 target_link_libraries(test_log edn)
 
 target_link_libraries(test_sig edn)
@@ -46,4 +47,6 @@ target_link_libraries(test_timer edn)
 target_link_libraries(test_io edn)
 
 target_link_libraries(test_connect edn)
+
+target_link_libraries(test_utils edn)
 

@@ -80,6 +80,9 @@ typedef struct EdnConnetInfo {
 
 #define EDN_CONNECT_INFO_INIT {NULL, 0, NULL, 0}
 
+EdnConnetInfo copy_connect_info(EdnConnetInfo info);//复制连接信息，深拷贝
+void free_connect_info(EdnConnetInfo info);
+
 // event loop
 EDN_API void edn_run();
 
