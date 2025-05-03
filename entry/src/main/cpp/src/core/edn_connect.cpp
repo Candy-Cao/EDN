@@ -60,12 +60,11 @@ EdnIOEventCallback EdnConnect::on_error = [](void* p)->int {
     socklen_t len = sizeof(error);
     EDN_LOG_ERROR("socket errno: %d, errmsg:%s", errno, strerror(errno));
     that->output_buffer_->CallBack({EDN_ERR_SOCK_ERROR, errno, strerror(errno)});
+    if (getsockopt(that->fd_, SOL_SOCKET, SO_ERROR, &error, &len) == -1) {//清空系统错误码
+        EDN_LOG_WARN("getsockopt error: %d", errno);
+    }
     that->Close();
     that->GetContext()->DelEvent(that->shared_from_this());
-    if (getsockopt(that->fd_, SOL_SOCKET, SO_ERROR, &error, &len) == -1) {//清空系统错误码
-        EDN_LOG_ERROR("getsockopt error: %d", errno);
-        return EDN_ERR_SYS_ERROR;
-    }
     return EDN_OK;
 };
 

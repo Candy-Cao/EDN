@@ -141,6 +141,7 @@ int Connect(int fd, const std::string ip, int port)
 
 int Close(int fd)
 {
+    EDN_LOG_INFO("connect :%d closed.", fd);
     if (fd == INVALID_FD) {
         EDN_LOG_ERROR("socket is invalid.");
         return EDN_ERR_PARAMS_INVALID;

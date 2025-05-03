@@ -54,6 +54,7 @@ int32_t edn_connect(EdnConnetInfo info, int timeout, pf_opt_complete_cb cb) {
         EdnContext::GetInstance()->DelEvent(conn);
     });
     conn->SetTimer(timer);
+    ctx->AddEvent(timer);
     return conn->GetFd();
 }
 
