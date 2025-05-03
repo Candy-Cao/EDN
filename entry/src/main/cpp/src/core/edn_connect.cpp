@@ -58,15 +58,14 @@ EdnIOEventCallback EdnConnect::on_error = [](void* p)->int {
     auto that = (EdnConnect*)p;
     int error = 0;
     socklen_t len = sizeof(error);
-    if (getsockopt(that->fd_, SOL_SOCKET, SO_ERROR, &error, &len) == -1) {
-        EDN_LOG_ERROR("getsockopt error: %d", errno);
-        that->Close();
-        return EDN_ERR_SYS_ERROR;
-    }
-    EDN_LOG_ERROR("socket error: %d, errmsg:%s", error, strerror(error));
-    that->output_buffer_->CallBack({EDN_ERR_SOCK_ERROR, error, strerror(error)});
+    EDN_LOG_ERROR("socket errno: %d, errmsg:%s", errno, strerror(errno));
+    that->output_buffer_->CallBack({EDN_ERR_SOCK_ERROR, errno, strerror(errno)});
     that->Close();
     that->GetContext()->DelEvent(that->shared_from_this());
+    if (getsockopt(that->fd_, SOL_SOCKET, SO_ERROR, &error, &len) == -1) {//清空系统错误码
+        EDN_LOG_ERROR("getsockopt error: %d", errno);
+        return EDN_ERR_SYS_ERROR;
+    }
     return EDN_OK;
 };
 
@@ -155,12 +154,17 @@ int EdnConnect::SendData(const char *data, size_t len, EdnAsyncOptCallback cb)
         EDN_LOG_ERROR("send data error, data is null or len is 0");
         return EDN_ERR_PARAMS_INVALID;
     }
+    if (connect_status_ < ConnectStatus::CONNECTED || connect_status_ > ConnectStatus::WRITE) {
+        EDN_LOG_ERROR("connect unavailable.");
+        cb({EDN_ERROR_CONNECT_UNAVAILABLE, errno, "connect unavailable."});
+        return EDN_ERROR_CONNECT_UNAVAILABLE;
+    }
+    output_buffer_->SetCallback(cb);
     auto ret = output_buffer_->Write(data, len);
     if (ret != EDN_OK) {
         EDN_LOG_ERROR("write data to buffer failed, error: %d", ret);
         return ret;
     }
-    output_buffer_->SetCallback(cb);
     if (output_buffer_->GetSize() > 0) {
         if (events_ & EdnEventType::WRITE) {//如果已经在监听可写事件，则不需要再添加
             EDN_LOG_INFO("output buffer size: %d", output_buffer_->GetSize());

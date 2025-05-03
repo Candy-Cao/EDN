@@ -60,6 +60,7 @@ typedef enum EDN_CODE {
     EDN_ERR_TIMEOUT = -3,
     EDN_ERR_SYS_ERROR = -4,
     EDN_ERR_BUFFER_NOT_ENOUGH = -5,
+    EDN_ERROR_CONNECT_UNAVAILABLE = -6
 } EDN_CODE;
 
 typedef enum EDN_OPT_TYPE {
