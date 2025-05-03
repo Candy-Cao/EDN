@@ -62,7 +62,7 @@ void EdnContext::AddEvent(EdnEventPtr event) {
         }
     }
     int ret = listener_->add(event);
-    EDN_LOG_INFO("add event, eventId:%d, fd:%d, ret:%d", event->GetUUID(), event->GetFd());
+    EDN_LOG_INFO("add event, eventId:%d, fd:%d, ret:%d", event->GetUUID(), event->GetFd(), ret);
     assert(ret == 0);
 }
 

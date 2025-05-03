@@ -120,9 +120,7 @@ EdnConnect::EdnConnect(const EdnConnectInfo &info, EdnAsyncOptCallback cb)
     // Bind local ip&port to a socket
     int ret = Bind(fd_, info.src_ip, info.src_port);
     if (ret != EDN_OK) {
-        EDN_LOG_ERROR("Failed to bind local ip&port");
-        close(fd_);
-        return;
+        EDN_LOG_WARN("Failed to bind local ip&port, use system default alloced ip&port");
     }
     // Connect to a server
     ret = Connect(fd_, info.dst_ip, info.dst_port);
