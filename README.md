@@ -9,7 +9,7 @@ make
 
 ```
 
-系分：https://www.yuque.com/alipayeaq9bwnfbi/tpyrdi/htnk2g0s0tb4femr?singleDoc# 《事件分发网络--Event Disptch Network 系分》
+https://docs.qq.com/markdown/DWnRrRExob2hCVmFs 《事件分发网络--Event Disptch Network 系分》
 
 示例：位于EDN/entry/src/main/cpp/src/test目录下
 
